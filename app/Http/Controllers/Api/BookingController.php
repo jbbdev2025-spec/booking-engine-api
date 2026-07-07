@@ -1,0 +1,102 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Vertical;
+use App\Services\BookingService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class BookingController extends Controller
+{
+    public function __construct(
+        private BookingService $bookingService
+    ) {}
+
+    /**
+     * POST /api/{vertical}/disponibilite
+     *
+     * Body : { "service": "Hammam Simple", "date": "2026-07-16", "heure": "15:30" }
+     * Réponse conforme au contrat du bot Node.js :
+     *   { success, disponible, creneaux_alternatifs, timestamp }
+     */
+    public function verifierDisponibilite(Request $request): JsonResponse
+    {
+        $request->validate([
+            'service' => 'required|string',
+            'date'    => 'required|date',
+            'heure'   => 'required|date_format:H:i',
+        ]);
+
+        $vertical = $request->attributes->get('vertical');
+
+        $resultat = $this->bookingService->verifierDisponibilite(
+            $vertical,
+            $request->service,
+            $request->date,
+            $request->heure
+        );
+
+        if (isset($resultat['erreur'])) {
+            return response()->json([
+                'success' => false,
+                'error' => $resultat['erreur'],
+            ], 422);
+        }
+
+        return response()->json([
+            'success'              => true,
+            'disponible'           => $resultat['disponible'],
+            'creneaux_alternatifs' => $resultat['creneaux_alternatifs'],
+            'timestamp'            => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * POST /api/{vertical}/reservation
+     *
+     * Body : { "prenom": "Thierry", "telephone": "699999999",
+     *          "service": "Hammam simple", "date": "2026-06-21", "heure": "15:30" }
+     * Réponse :
+     *   { success, confirmation, evenement_id, lien, timestamp }
+     */
+    public function creerReservation(Request $request): JsonResponse
+    {
+        $request->validate([
+            'prenom'    => 'required|string|max:100',
+            'telephone' => 'required|string|max:20',
+            'service'   => 'required|string',
+            'date'      => 'required|date',
+            'heure'     => 'required|date_format:H:i',
+        ]);
+
+        $vertical = $request->attributes->get('vertical');
+
+        $resultat = $this->bookingService->creerReservation(
+            $vertical,
+            $request->prenom,
+            $request->telephone,
+            $request->service,
+            $request->date,
+            $request->heure
+        );
+
+        if (!$resultat['success']) {
+            return response()->json([
+                'success'              => false,
+                'message'              => $resultat['message'],
+                'disponible'           => $resultat['disponible'] ?? false,
+                'creneaux_alternatifs' => $resultat['creneaux_alternatifs'] ?? [],
+            ], 409);
+        }
+
+        return response()->json([
+            'success'       => true,
+            'confirmation'  => $resultat['confirmation'],
+            'evenement_id'  => $resultat['evenement_id'],
+            'lien'          => $resultat['lien'],
+            'timestamp'     => now()->toIso8601String(),
+        ]);
+    }
+}
