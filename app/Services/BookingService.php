@@ -119,6 +119,7 @@ class BookingService
 
         $rdv = RendezVous::create([
             'vertical_id' => $vertical->id,
+            'ville' => $vertical->ville,
             'prenom' => $prenom,
             'telephone' => $telephone,
             'categorie' => $categorieNom,
