@@ -99,4 +99,53 @@ class BookingController extends Controller
             'timestamp'     => now()->toIso8601String(),
         ]);
     }
+
+    public function index(string $vertical)
+    {
+        $verticalRecord = Vertical::where('slug', $vertical)->first();
+        if (!$verticalRecord) {
+            return response()->json(['success' => false, 'error' => 'Verticale non trouvée'], 404);
+        }
+
+        $reservations = \App\Models\RendezVous::where('vertical_id', $verticalRecord->id)
+            ->orderBy('date_rdv', 'desc')
+            ->orderBy('heure_rdv', 'desc')
+            ->get()
+            ->map(function ($r) {
+                return [
+                    'id'         => $r->id,
+                    'prenom'     => $r->prenom,
+                    'telephone'  => $r->telephone,
+                    'service'    => $r->service,
+                    'date_rdv'   => $r->date_rdv?->toDateString(),
+                    'heure_rdv'  => $r->heure_rdv?->format('H:i'),
+                    'statut'     => $r->statut ?? 'confirmé',
+                    'categorie'  => $r->categorie,
+                    'montant'    => $r->montant,
+                    'created_at' => $r->created_at?->toISOString(),
+                ];
+            });
+
+        return response()->json(['success' => true, 'data' => $reservations]);
+    }
+
+    public function update(Request $request, string $vertical, $id)
+    {
+        $verticalRecord = Vertical::where('slug', $vertical)->first();
+        if (!$verticalRecord) {
+            return response()->json(['success' => false, 'error' => 'Verticale non trouvée'], 404);
+        }
+
+        $reservation = \App\Models\RendezVous::where('vertical_id', $verticalRecord->id)
+            ->findOrFail($id);
+
+        $validated = $request->validate([
+            'statut'  => 'sometimes|string',
+            'montant' => 'sometimes|nullable|numeric',
+        ]);
+
+        $reservation->update($validated);
+
+        return response()->json(['success' => true, 'data' => $reservation]);
+    }
 }
