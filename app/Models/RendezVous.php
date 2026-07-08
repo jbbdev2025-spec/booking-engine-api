@@ -10,7 +10,7 @@ class RendezVous extends Model
     protected $table = 'rendez_vous';
 
     protected $fillable = [
-        'vertical_id', 'prenom', 'telephone', 'categorie',
+        'vertical_id', 'ville', 'prenom', 'telephone', 'categorie',
         'service', 'date_rdv', 'heure_rdv', 'statut', 'montant',
     ];
 
