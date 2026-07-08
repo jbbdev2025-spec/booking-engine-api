@@ -27,6 +27,7 @@ class BookingController extends Controller
             'service' => 'required|string',
             'date'    => 'required|date',
             'heure'   => 'required|date_format:H:i',
+            'ville' => 'required|string|max:100',
         ]);
 
         $vertical = $request->attributes->get('vertical');
@@ -35,7 +36,8 @@ class BookingController extends Controller
             $vertical,
             $request->service,
             $request->date,
-            $request->heure
+            $request->heure,
+            $request->ville
         );
 
         if (isset($resultat['erreur'])) {
@@ -69,6 +71,7 @@ class BookingController extends Controller
             'service'   => 'required|string',
             'date'      => 'required|date',
             'heure'     => 'required|date_format:H:i',
+            'ville'     => 'required|string|max:100',
         ]);
 
         $vertical = $request->attributes->get('vertical');
@@ -100,14 +103,21 @@ class BookingController extends Controller
         ]);
     }
 
-    public function index(string $vertical)
+    public function index(Request $request, string $vertical)
     {
         $verticalRecord = Vertical::where('slug', $vertical)->first();
         if (!$verticalRecord) {
             return response()->json(['success' => false, 'error' => 'Verticale non trouvée'], 404);
         }
 
-        $reservations = \App\Models\RendezVous::where('vertical_id', $verticalRecord->id)
+        $query = \App\Models\RendezVous::where('vertical_id', $verticalRecord->id);
+
+        // Filtre par ville si demandé
+        if ($request->has('ville')) {
+            $query->where('ville', $request->ville);
+        }
+
+        $reservations = $query
             ->orderBy('date_rdv', 'desc')
             ->orderBy('heure_rdv', 'desc')
             ->get()
@@ -121,6 +131,7 @@ class BookingController extends Controller
                     'heure_rdv'  => $r->heure_rdv?->format('H:i'),
                     'statut'     => $r->statut ?? 'confirmé',
                     'categorie'  => $r->categorie,
+                    'ville'      => $r->ville ?? '',
                     'montant'    => $r->montant,
                     'created_at' => $r->created_at?->toISOString(),
                 ];
