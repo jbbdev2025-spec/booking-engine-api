@@ -42,7 +42,7 @@ class ConflictDetector
                 continue;
             }
 
-            // Fallback to 30 minutes if prestation duration is not set
+            // Fallback to default duration if prestation duration is not set
             $dureeRdv = $info->duree_minutes ?: SchedulingRules::DEFAULT_DURATION_MINUTES;
 
             $debutRdv = TimeHelper::toMinutes(

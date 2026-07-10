@@ -6,6 +6,7 @@ use App\Models\Prestation;
 use App\Models\RendezVous;
 use App\Models\Vertical;
 use App\Domain\Booking\BookingRules;
+use App\Domain\Scheduling\SchedulingRules;
 use App\Domain\Shared\Time\TimeHelper;
 use App\Domain\Scheduling\ConflictDetector;
 
@@ -168,6 +169,7 @@ class BookingService
         string $date,
         int $categorieId,
         int $dureeMin,
+        int $debutMin,
         int $capacite,
         int $heureDemandee
     ): array {
@@ -181,7 +183,7 @@ class BookingService
         for (
             $heure = $ouvertureMin;
             $heure + $dureeMin <= $fermetureMin;
-            $heure += BookingRules::SLOT_STEP_MINUTES
+            $heure += SchedulingRules::SLOT_STEP_MINUTES
         ) {
 
             $conflits = $this->conflictDetector->count(
@@ -222,18 +224,18 @@ class BookingService
         foreach ($apres as $slot) {
             $resultats[] = $slot;
 
-            if (count($resultats) === BookingRules::MAX_ALTERNATIVES) {
+            if (count($resultats) === SchedulingRules::MAX_ALTERNATIVES) {
                 break;
             }
         }
 
-        if (count($resultats) < BookingRules::MAX_ALTERNATIVES) {
+        if (count($resultats) < SchedulingRules::MAX_ALTERNATIVES) {
 
             foreach ($avant as $slot) {
 
                 $resultats[] = $slot;
 
-                if (count($resultats) === BookingRules::MAX_ALTERNATIVES) {
+                if (count($resultats) === SchedulingRules::MAX_ALTERNATIVES) {
                     break;
                 }
             }
