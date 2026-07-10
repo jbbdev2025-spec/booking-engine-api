@@ -4,7 +4,7 @@ namespace App\Domain\Scheduling;
 
 use App\Domain\Booking\BookingRules;
 use App\Domain\Scheduling\SchedulingRules;
-use App\Domain\Shared\Time\TimeHelper;
+use App\Domain\Shared\Time\TimeCalculator;
 use App\Models\Prestation;
 use App\Models\RendezVous;
 use App\Models\Vertical;
@@ -45,12 +45,12 @@ class ConflictDetector
             // Fallback to default duration if prestation duration is not set
             $dureeRdv = $info->duree_minutes ?: SchedulingRules::DEFAULT_DURATION_MINUTES;
 
-            $debutRdv = TimeHelper::toMinutes(
+            $debutRdv = TimeCalculator::toMinutes(
                 $rdv->heure_rdv->format('H:i')
             );
 
             if (
-                TimeHelper::overlap(
+                TimeCalculator::overlap(
                     $debutMin,
                     $dureeMin,
                     $debutRdv,

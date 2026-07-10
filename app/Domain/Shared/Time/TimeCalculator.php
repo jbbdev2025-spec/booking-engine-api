@@ -2,7 +2,7 @@
 
 namespace App\Domain\Shared\Time;
 
-class TimeHelper
+class TimeCalculator
 {
     /**
      * Convertit HH:mm en nombre de minutes depuis minuit.

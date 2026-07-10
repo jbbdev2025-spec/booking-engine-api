@@ -7,7 +7,7 @@ use App\Models\RendezVous;
 use App\Models\Vertical;
 use App\Domain\Booking\BookingRules;
 use App\Domain\Scheduling\SchedulingRules;
-use App\Domain\Shared\Time\TimeHelper;
+use App\Domain\Shared\Time\TimeCalculator;
 use App\Domain\Scheduling\ConflictDetector;
 
 class BookingService
@@ -46,11 +46,11 @@ class BookingService
         $capacite = $vertical->capacites_par_categorie[$categorieId] ?? 1;
 
         // 2. Convertir l'heure en minutes
-        $debutMin = TimeHelper::toMinutes($heure);
+        $debutMin = TimeCalculator::toMinutes($heure);
 
         // 3. Vérifier les horaires d'ouverture
-        $ouvertureMin = TimeHelper::toMinutes($vertical->ouverture->format('H:i'));
-        $fermetureMin = TimeHelper::toMinutes($vertical->fermeture->format('H:i'));
+        $ouvertureMin = TimeCalculator::toMinutes($vertical->ouverture->format('H:i'));
+        $fermetureMin = TimeCalculator::toMinutes($vertical->fermeture->format('H:i'));
 
         if ($debutMin < $ouvertureMin || $debutMin + $dureeMin > $fermetureMin) {
             return [
@@ -174,8 +174,8 @@ class BookingService
         int $heureDemandee
     ): array {
 
-        $ouvertureMin = TimeHelper::toMinutes($vertical->ouverture->format('H:i'));
-        $fermetureMin = TimeHelper::toMinutes($vertical->fermeture->format('H:i'));
+        $ouvertureMin = TimeCalculator::toMinutes($vertical->ouverture->format('H:i'));
+        $fermetureMin = TimeCalculator::toMinutes($vertical->fermeture->format('H:i'));
 
         $apres = [];
         $avant = [];
@@ -242,7 +242,7 @@ class BookingService
         }
 
         return array_map(
-            fn($slot) => TimeHelper::toTime($slot['heure']),
+            fn($slot) => TimeCalculator::toTime($slot['heure']),
             $resultats
         );
     }
