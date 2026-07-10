@@ -156,24 +156,6 @@ class BookingService
 
     // ─── Méthodes privées ─────────────────────────────────────────
 
-    private function heureVersMinutes(string $heure): int
-    {
-        $parts = explode(':', $heure);
-        return (int) $parts[0] * 60 + (int) ($parts[1] ?? 0);
-    }
-
-    private function toTime(int $minutes): string
-    {
-        $h = str_pad((string) floor($minutes / 60), 2, '0', STR_PAD_LEFT);
-        $m = str_pad((string) ($minutes % 60), 2, '0', STR_PAD_LEFT);
-        return "{$h}:{$m}";
-    }
-
-    private function chevauchent(int $debutA, int $dureeA, int $debutB, int $dureeB): bool
-    {
-        return $debutA < $debutB + $dureeB && $debutB < $debutA + $dureeA;
-    }
-
     private function compterConflits(
         Vertical $vertical,
         string $date,
@@ -198,9 +180,9 @@ class BookingService
             }
 
             $dureeRdv = $info->duree_minutes ?: BookingRules::DEFAULT_DURATION_MINUTES;
-            $debutRdv = $this->heureVersMinutes($rdv->heure_rdv->format('H:i'));
+            $debutRdv = TimeHelper::toMinutes($rdv->heure_rdv->format('H:i'));
 
-            if ($this->chevauchent($debutMin, $dureeMin, $debutRdv, $dureeRdv)) {
+            if (TimeHelper::overlap($debutMin, $dureeMin, $debutRdv, $dureeRdv)) {
                 $conflits++;
             }
         }
@@ -217,8 +199,8 @@ class BookingService
         int $heureDemandee
     ): array {
 
-        $ouvertureMin = $this->heureVersMinutes($vertical->ouverture->format('H:i'));
-        $fermetureMin = $this->heureVersMinutes($vertical->fermeture->format('H:i'));
+        $ouvertureMin = TimeHelper::toMinutes($vertical->ouverture->format('H:i'));
+        $fermetureMin = TimeHelper::toMinutes($vertical->fermeture->format('H:i'));
 
         $apres = [];
         $avant = [];
@@ -285,7 +267,7 @@ class BookingService
         }
 
         return array_map(
-            fn($slot) => Timehelper::toMinutes($slot['heure']),
+            fn($slot) => TimeHelper::toTime($slot['heure']),
             $resultats
         );
     }
