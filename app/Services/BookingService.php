@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Prestation;
 use App\Models\RendezVous;
 use App\Models\Vertical;
+use App\Domain\Booking\BookingRules;
 
 class BookingService
 {
@@ -48,7 +49,12 @@ class BookingService
             return [
                 'disponible' => false,
                 'creneaux_alternatifs' => $this->trouverAlternatives(
-                    $vertical, $date, $categorieId, $dureeMin, $capacite, $ouvertureMin
+                    $vertical,
+                    $date,
+                    $categorieId,
+                    $dureeMin,
+                    $capacite,
+                    $ouvertureMin
                 ),
                 'dureeMinutes' => $dureeMin,
                 'categorieId' => $categorieId,
@@ -57,7 +63,11 @@ class BookingService
 
         // 4. Compter les conflits
         $conflits = $this->compterConflits(
-            $vertical, $date, $categorieId, $debutMin, $dureeMin
+            $vertical,
+            $date,
+            $categorieId,
+            $debutMin,
+            $dureeMin
         );
 
         if ($conflits < $capacite) {
@@ -73,7 +83,12 @@ class BookingService
         return [
             'disponible' => false,
             'creneaux_alternatifs' => $this->trouverAlternatives(
-                $vertical, $date, $categorieId, $dureeMin, $capacite, $debutMin
+                $vertical,
+                $date,
+                $categorieId,
+                $dureeMin,
+                $capacite,
+                $debutMin
             ),
             'dureeMinutes' => $dureeMin,
             'categorieId' => $categorieId,
@@ -126,7 +141,7 @@ class BookingService
             'service' => $service,
             'date_rdv' => $date,
             'heure_rdv' => $heure . ':00',
-            'statut' => 'confirmé',
+            'statut' => BookingRules::STATUS_CONFIRMED,
             'montant' => $montant,
         ]);
 
@@ -168,7 +183,7 @@ class BookingService
         // Récupérer tous les RDV du jour pour cette verticale
         $rdvs = RendezVous::where('vertical_id', $vertical->id)
             ->where('date_rdv', $date)
-            ->where('statut', 'not like', '%annul%')
+            ->where('statut', 'not like', '%' . BookingRules::CANCELLED_KEYWORD . '%')
             ->get();
 
         // Index des prestations pour obtenir catégorie et durée
@@ -181,7 +196,7 @@ class BookingService
                 continue; // Catégorie différente = pas de conflit de ressource
             }
 
-            $dureeRdv = $info->duree_minutes ?: 30;
+            $dureeRdv = $info->duree_minutes ?: BookingRules::DEFAULT_DURATION_MINUTES;
             $debutRdv = $this->heureVersMinutes($rdv->heure_rdv->format('H:i'));
 
             if ($this->chevauchent($debutMin, $dureeMin, $debutRdv, $dureeRdv)) {
@@ -198,25 +213,80 @@ class BookingService
         int $categorieId,
         int $dureeMin,
         int $capacite,
-        int $partirDe
+        int $heureDemandee
     ): array {
-        $pas = 15;
-        $alternatives = [];
 
         $ouvertureMin = $this->heureVersMinutes($vertical->ouverture->format('H:i'));
         $fermetureMin = $this->heureVersMinutes($vertical->fermeture->format('H:i'));
 
-        $candidat = (int) (ceil(max($partirDe, $ouvertureMin) / $pas) * $pas);
+        $apres = [];
+        $avant = [];
 
-        while ($candidat + $dureeMin <= $fermetureMin && count($alternatives) < 3) {
-            $conflits = $this->compterConflits($vertical, $date, $categorieId, $candidat, $dureeMin);
-            if ($conflits < $capacite) {
-                $alternatives[] = $this->minutesVersHeure($candidat);
+        for (
+            $heure = $ouvertureMin;
+            $heure + $dureeMin <= $fermetureMin;
+            $heure += BookingRules::SLOT_STEP_MINUTES
+        ) {
+
+            $conflits = $this->compterConflits(
+                $vertical,
+                $date,
+                $categorieId,
+                $heure,
+                $dureeMin
+            );
+
+            if ($conflits >= $capacite) {
+                continue;
             }
-            $candidat += $pas;
+
+            if ($heure >= $heureDemandee) {
+
+                $apres[] = [
+                    'heure' => $heure,
+                    'distance' => $heure - $heureDemandee,
+                ];
+            } else {
+
+                $avant[] = [
+                    'heure' => $heure,
+                    'distance' => $heureDemandee - $heure,
+                ];
+            }
         }
 
-        return $alternatives;
+        // Les créneaux APRÈS sont prioritaires
+        usort($apres, fn($a, $b) => $a['distance'] <=> $b['distance']);
+
+        // Puis les créneaux AVANT
+        usort($avant, fn($a, $b) => $a['distance'] <=> $b['distance']);
+
+        $resultats = [];
+
+        foreach ($apres as $slot) {
+            $resultats[] = $slot;
+
+            if (count($resultats) === BookingRules::MAX_ALTERNATIVES) {
+                break;
+            }
+        }
+
+        if (count($resultats) < BookingRules::MAX_ALTERNATIVES) {
+
+            foreach ($avant as $slot) {
+
+                $resultats[] = $slot;
+
+                if (count($resultats) === BookingRules::MAX_ALTERNATIVES) {
+                    break;
+                }
+            }
+        }
+
+        return array_map(
+            fn($slot) => $this->minutesVersHeure($slot['heure']),
+            $resultats
+        );
     }
 
     private function resoudrePrix(Vertical $vertical, string $service): ?int
