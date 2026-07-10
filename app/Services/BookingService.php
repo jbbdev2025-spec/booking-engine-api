@@ -6,6 +6,7 @@ use App\Models\Prestation;
 use App\Models\RendezVous;
 use App\Models\Vertical;
 use App\Domain\Booking\BookingRules;
+use App\Domain\Shared\Time\TimeHelper;
 
 class BookingService
 {
@@ -39,11 +40,11 @@ class BookingService
         $capacite = $vertical->capacites_par_categorie[$categorieId] ?? 1;
 
         // 2. Convertir l'heure en minutes
-        $debutMin = $this->heureVersMinutes($heure);
+        $debutMin = TimeHelper::toMinutes($heure);
 
         // 3. Vérifier les horaires d'ouverture
-        $ouvertureMin = $this->heureVersMinutes($vertical->ouverture->format('H:i'));
-        $fermetureMin = $this->heureVersMinutes($vertical->fermeture->format('H:i'));
+        $ouvertureMin = TimeHelper::toMinutes($vertical->ouverture->format('H:i'));
+        $fermetureMin = TimeHelper::toMinutes($vertical->fermeture->format('H:i'));
 
         if ($debutMin < $ouvertureMin || $debutMin + $dureeMin > $fermetureMin) {
             return [
@@ -161,7 +162,7 @@ class BookingService
         return (int) $parts[0] * 60 + (int) ($parts[1] ?? 0);
     }
 
-    private function minutesVersHeure(int $minutes): string
+    private function toTime(int $minutes): string
     {
         $h = str_pad((string) floor($minutes / 60), 2, '0', STR_PAD_LEFT);
         $m = str_pad((string) ($minutes % 60), 2, '0', STR_PAD_LEFT);
@@ -284,7 +285,7 @@ class BookingService
         }
 
         return array_map(
-            fn($slot) => $this->minutesVersHeure($slot['heure']),
+            fn($slot) => Timehelper::toMinutes($slot['heure']),
             $resultats
         );
     }
