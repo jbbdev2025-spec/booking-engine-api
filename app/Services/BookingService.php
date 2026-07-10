@@ -7,9 +7,14 @@ use App\Models\RendezVous;
 use App\Models\Vertical;
 use App\Domain\Booking\BookingRules;
 use App\Domain\Shared\Time\TimeHelper;
+use App\Domain\Scheduling\ConflictDetector;
 
 class BookingService
 {
+    public function __construct(
+        private ConflictDetector $conflictDetector
+    ) {}
+
     /**
      * Vérifie la disponibilité d'un créneau
      * Réplique exactement la logique de lib/booking.ts du dashboard Next.js
@@ -54,6 +59,7 @@ class BookingService
                     $date,
                     $categorieId,
                     $dureeMin,
+                    $debutMin,
                     $capacite,
                     $ouvertureMin
                 ),
@@ -63,7 +69,7 @@ class BookingService
         }
 
         // 4. Compter les conflits
-        $conflits = $this->compterConflits(
+        $conflits = $this->conflictDetector->count(
             $vertical,
             $date,
             $categorieId,
@@ -88,6 +94,7 @@ class BookingService
                 $date,
                 $categorieId,
                 $dureeMin,
+                $debutMin,
                 $capacite,
                 $debutMin
             ),
@@ -156,40 +163,6 @@ class BookingService
 
     // ─── Méthodes privées ─────────────────────────────────────────
 
-    private function compterConflits(
-        Vertical $vertical,
-        string $date,
-        int $categorieId,
-        int $debutMin,
-        int $dureeMin
-    ): int {
-        // Récupérer tous les RDV du jour pour cette verticale
-        $rdvs = RendezVous::where('vertical_id', $vertical->id)
-            ->where('date_rdv', $date)
-            ->where('statut', 'not like', '%' . BookingRules::CANCELLED_KEYWORD . '%')
-            ->get();
-
-        // Index des prestations pour obtenir catégorie et durée
-        $prestations = Prestation::where('vertical_id', $vertical->id)->get()->keyBy('nom');
-
-        $conflits = 0;
-        foreach ($rdvs as $rdv) {
-            $info = $prestations->get($rdv->service);
-            if (!$info || $info->categorie_id !== $categorieId) {
-                continue; // Catégorie différente = pas de conflit de ressource
-            }
-
-            $dureeRdv = $info->duree_minutes ?: BookingRules::DEFAULT_DURATION_MINUTES;
-            $debutRdv = TimeHelper::toMinutes($rdv->heure_rdv->format('H:i'));
-
-            if (TimeHelper::overlap($debutMin, $dureeMin, $debutRdv, $dureeRdv)) {
-                $conflits++;
-            }
-        }
-
-        return $conflits;
-    }
-
     private function trouverAlternatives(
         Vertical $vertical,
         string $date,
@@ -211,7 +184,7 @@ class BookingService
             $heure += BookingRules::SLOT_STEP_MINUTES
         ) {
 
-            $conflits = $this->compterConflits(
+            $conflits = $this->conflictDetector->count(
                 $vertical,
                 $date,
                 $categorieId,
