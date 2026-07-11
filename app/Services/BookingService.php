@@ -6,16 +6,20 @@ use App\Models\RendezVous;
 use App\Models\Vertical;
 use App\Domain\Booking\BookingRules;
 use App\Domain\Catalog\PriceResolver;
-use App\Repositories\BookingRepository;
+use App\Domain\Booking\BookingRepository;
 use App\Domain\Scheduling\AvailabilityChecker;
 
 class BookingService
 {
+    private BookingRepository $bookingRepository;
+
     public function __construct(
         private AvailabilityChecker $availabilityChecker,
         private PriceResolver $priceResolver,
-        private BookingRepository $bookingRepository
-    ) {}
+        BookingRepository $bookingRepository
+    ) {
+        $this->bookingRepository = $bookingRepository;
+    }
 
     /**
      * Vérifie la disponibilité d'un créneau
