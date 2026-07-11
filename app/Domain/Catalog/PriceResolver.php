@@ -7,6 +7,13 @@ use App\Models\Vertical;
 
 class PriceResolver
 {
+    private CatalogRepository $catalogRepository;
+
+    public function __construct(CatalogRepository $catalogRepository)
+    {
+        $this->catalogRepository = $catalogRepository;
+    }
+
     /**
      * Résout le prix d'une prestation.
      */
@@ -15,9 +22,7 @@ class PriceResolver
         string $service
     ): ?int {
 
-        $prestation = Prestation::where('vertical_id', $vertical->id)
-            ->where('nom', $service)
-            ->first();
+        $prestation = $this->catalogRepository->findService($vertical->id, $service);
 
         if (!$prestation || empty($prestation->prix)) {
             return null;

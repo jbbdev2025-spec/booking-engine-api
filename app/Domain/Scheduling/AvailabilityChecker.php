@@ -3,13 +3,14 @@
 namespace App\Domain\Scheduling;
 
 use App\Domain\Shared\Time\TimeCalculator;
-use App\Models\Prestation;
+use App\Domain\Catalog\CatalogRepository;
 use App\Models\Vertical;
 
 class AvailabilityChecker
 {
     public function __construct(
-        private ConflictDetector $conflictDetector
+        private ConflictDetector $conflictDetector,
+        private CatalogRepository $catalogRepository
     ) {}
 
     public function check(
@@ -20,9 +21,7 @@ class AvailabilityChecker
     ): array {
 
         // 1. Trouver la prestation
-        $prestation = Prestation::where('vertical_id', $vertical->id)
-            ->where('nom', $service)
-            ->first();
+        $prestation = $this->catalogRepository->findService($vertical->id, $service);
 
         if (!$prestation) {
             return [
