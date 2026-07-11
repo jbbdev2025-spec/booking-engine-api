@@ -6,13 +6,15 @@ use App\Models\RendezVous;
 use App\Models\Vertical;
 use App\Domain\Booking\BookingRules;
 use App\Domain\Catalog\PriceResolver;
+use App\Repositories\BookingRepository;
 use App\Domain\Scheduling\AvailabilityChecker;
 
 class BookingService
 {
     public function __construct(
         private AvailabilityChecker $availabilityChecker,
-        private PriceResolver $priceResolver
+        private PriceResolver $priceResolver,
+        private BookingRepository $bookingRepository
     ) {}
 
     /**
@@ -73,7 +75,7 @@ class BookingService
             $service
         );
 
-        $rdv = RendezVous::create([
+        $rdv = $this->bookingRepository->create([
             'vertical_id' => $vertical->id,
             'ville' => $vertical->ville,
             'prenom' => $prenom,

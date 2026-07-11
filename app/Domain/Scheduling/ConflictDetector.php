@@ -11,6 +11,10 @@ use App\Models\Vertical;
 
 class ConflictDetector
 {
+    public function __construct(
+        private BookingRepository $bookingRepository
+    ) {}
+
     public function count(
         Vertical $vertical,
         string $date,
@@ -19,10 +23,11 @@ class ConflictDetector
         int $dureeMin
     ): int {
 
-        $rdvs = RendezVous::where('vertical_id', $vertical->id)
-            ->where('date_rdv', $date)
-            ->where('statut', 'not like', '%' . BookingRules::STATUS_CANCELLED . '%')
-            ->get();
+        $rdvs = $this->bookingRepository
+            ->getReservationsForDay(
+                $vertical->id,
+                $date
+            );
 
         $prestations = Prestation::where('vertical_id', $vertical->id)
             ->get()
