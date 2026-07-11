@@ -2,12 +2,11 @@
 
 namespace App\Domain\Scheduling;
 
-use App\Domain\Booking\BookingRules;
+use App\Models\Vertical;
+use App\Models\Prestation;
+use App\Domain\Booking\BookingRepository;
 use App\Domain\Scheduling\SchedulingRules;
 use App\Domain\Shared\Time\TimeCalculator;
-use App\Models\Prestation;
-use App\Models\RendezVous;
-use App\Models\Vertical;
 
 class ConflictDetector
 {
@@ -23,11 +22,10 @@ class ConflictDetector
         int $dureeMin
     ): int {
 
-        $rdvs = $this->bookingRepository
-            ->getReservationsForDay(
-                $vertical->id,
-                $date
-            );
+        $rdvs = $this->bookingRepository->getReservationsForDay(
+            $vertical->id,
+            $date
+        );
 
         $prestations = Prestation::where('vertical_id', $vertical->id)
             ->get()

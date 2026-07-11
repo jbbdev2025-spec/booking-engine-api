@@ -2,24 +2,20 @@
 
 namespace App\Domain\Booking;
 
-use App\Models\RendezVous;
 use App\Models\Vertical;
-use App\Domain\Booking\BookingRules;
 use App\Domain\Catalog\PriceResolver;
+use App\Domain\Booking\BookingFactory;
 use App\Domain\Booking\BookingRepository;
 use App\Domain\Scheduling\AvailabilityChecker;
 
 class BookingService
 {
-    private BookingRepository $bookingRepository;
-
     public function __construct(
         private AvailabilityChecker $availabilityChecker,
         private PriceResolver $priceResolver,
-        BookingRepository $bookingRepository
-    ) {
-        $this->bookingRepository = $bookingRepository;
-    }
+        private BookingRepository $bookingRepository,
+        private BookingFactory $bookingFactory
+    ) {}
 
     /**
      * Vérifie la disponibilité d'un créneau
@@ -69,29 +65,27 @@ class BookingService
             ];
         }
 
-        // Résoudre le nom de catégorie
-        $categories = $vertical->categories;
-        $categorieNom = $categories[$verif['categorieId']] ?? null;
-
-        // Résoudre le prix depuis le catalogue
+        // Résolution du prix
         $montant = $this->priceResolver->resolve(
             $vertical,
             $service
         );
 
-        $rdv = $this->bookingRepository->create([
-            'vertical_id' => $vertical->id,
-            'ville' => $vertical->ville,
-            'prenom' => $prenom,
-            'telephone' => $telephone,
-            'categorie' => $categorieNom,
-            'service' => $service,
-            'date_rdv' => $date,
-            'heure_rdv' => $heure . ':00',
-            'statut' => BookingRules::STATUS_CONFIRMED,
-            'montant' => $montant,
+        // Résoudre le nom de catégorie
+        $data = $this->bookingFactory->make($vertical, [
+            'prenom'      => $prenom,
+            'telephone'   => $telephone,
+            'service'     => $service,
+            'date'        => $date,
+            'heure'       => $heure,
+            'categorieId' => $verif['categorieId'],
+            'montant'     => $montant,
         ]);
 
+        // Création de la réservation
+        $rdv = $this->bookingRepository->create($data);
+
+        // Retourne la confirmation
         return [
             'success' => true,
             'confirmation' => true,
