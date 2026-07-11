@@ -22,4 +22,12 @@ class CatalogRepository
         return Prestation::where('vertical_id', $verticalId)
             ->get();
     }
+
+    public function getServicesIndexedByName(
+        int $verticalId
+    ): Collection {
+        return Prestation::where('vertical_id', $verticalId)
+            ->get()
+            ->keyBy('nom');
+    }
 }

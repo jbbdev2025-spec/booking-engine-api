@@ -3,15 +3,16 @@
 namespace App\Domain\Scheduling;
 
 use App\Models\Vertical;
-use App\Models\Prestation;
 use App\Domain\Booking\BookingRepository;
 use App\Domain\Scheduling\SchedulingRules;
 use App\Domain\Shared\Time\TimeCalculator;
+use App\Domain\Catalog\CatalogRepository;
 
 class ConflictDetector
 {
     public function __construct(
-        private BookingRepository $bookingRepository
+        private BookingRepository $bookingRepository,
+        private CatalogRepository $catalogRepository
     ) {}
 
     public function count(
@@ -27,9 +28,7 @@ class ConflictDetector
             $date
         );
 
-        $prestations = Prestation::where('vertical_id', $vertical->id)
-            ->get()
-            ->keyBy('nom');
+        $prestations = $this->catalogRepository->getServicesIndexedByName($vertical->id);
 
         $conflits = 0;
 

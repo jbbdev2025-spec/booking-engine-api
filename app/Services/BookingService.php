@@ -6,6 +6,7 @@ use App\Models\Vertical;
 use App\Domain\Catalog\PriceResolver;
 use App\Domain\Booking\BookingFactory;
 use App\Domain\Booking\BookingRepository;
+use App\Domain\Booking\BookingValidator;
 use App\Domain\Scheduling\AvailabilityChecker;
 
 class BookingService
@@ -14,7 +15,8 @@ class BookingService
         private AvailabilityChecker $availabilityChecker,
         private PriceResolver $priceResolver,
         private BookingRepository $bookingRepository,
-        private BookingFactory $bookingFactory
+        private BookingFactory $bookingFactory,
+        private BookingValidator $bookingValidator
     ) {}
 
     /**
@@ -49,20 +51,10 @@ class BookingService
         // Re-vérification avant écriture
         $verif = $this->verifierDisponibilite($vertical, $service, $date, $heure);
 
-        if (isset($verif['erreur'])) {
-            return [
-                'success' => false,
-                'message' => $verif['erreur'],
-            ];
-        }
+        $validation = $this->bookingValidator->validate($verif);
 
-        if (!$verif['disponible']) {
-            return [
-                'success' => false,
-                'message' => 'Ce créneau est déjà pris',
-                'disponible' => false,
-                'creneaux_alternatifs' => $verif['creneaux_alternatifs'],
-            ];
+        if ($validation !== null) {
+            return $validation;
         }
 
         // Résolution du prix
