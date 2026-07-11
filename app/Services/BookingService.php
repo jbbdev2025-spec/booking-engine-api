@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Domain\Booking;
 
 use App\Models\RendezVous;
 use App\Models\Vertical;
