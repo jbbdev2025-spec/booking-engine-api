@@ -3,40 +3,47 @@
 namespace App\Domain\Catalog;
 
 use App\Models\Vertical;
+use App\Contracts\Repositories\CatalogRepositoryInterface;
 
 class CatalogService
 {
     public function __construct(
-        private CatalogService $catalogService,
+        private CatalogRepositoryInterface $catalogRepository,
         private PriceResolver $priceResolver,
     ) {}
 
-    public function findService(Vertical $vertical, string $nomService): ?object
+    public function findService(
+        Vertical $vertical,
+        string $service
+    ): ?object
     {
-        return $this->catalogService->findService($vertical, $nomService);
+        return $this->catalogRepository->findService(
+            $vertical->id,
+            $service
+        );
     }
 
     public function getPrice(
         Vertical $vertical,
         string $service
     ): int
-        {
-            return $this->catalogService->getPrice($vertical, $service);
-        }
+    {
+        return $this->priceResolver->resolve(
+            $vertical->id,
+            $service
+        );
+    }
 
     public function getDuration(
         Vertical $vertical,
         string $service
     ): int
-        {
-            return $this->catalogService->getDuration($vertical, $service);
-        }
-
-    public function resolvePrice(
-        Vertical $vertical,
-        string $service
-    ): int
     {
-        return $this->priceResolver->resolve($vertical, $service);
+        $prestation = $this->findService(
+            $vertical,
+            $service
+        );
+
+        return $prestation->duree_min;
     }
 }

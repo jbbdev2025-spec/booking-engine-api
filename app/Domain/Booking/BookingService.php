@@ -3,17 +3,17 @@
 namespace App\Domain\Booking;
 
 use App\Models\Vertical;
-use App\Domain\Catalog\PriceResolver;
+use App\Domain\Catalog\CatalogService;
 use App\Domain\Booking\BookingFactory;
 use App\Domain\Booking\BookingValidator;
-use App\Domain\Scheduling\AvailabilityChecker;
+use App\Domain\Scheduling\SchedulingService;
 use App\Contracts\Repositories\BookingRepositoryInterface;
 
 class BookingService
 {
     public function __construct(
-        private AvailabilityChecker $availabilityChecker,
-        private PriceResolver $priceResolver,
+        private SchedulingService $schedulingService,
+        private CatalogService $catalogService,
         private BookingRepositoryInterface $bookingRepository,
         private BookingFactory $bookingFactory,
         private BookingValidator $bookingValidator
@@ -29,7 +29,7 @@ class BookingService
         string $date,
         string $heure
     ): array {
-        return $this->availabilityChecker->check(
+        return $this->schedulingService->verifierDisponibilite(
             $vertical,
             $service,
             $date,
@@ -63,7 +63,7 @@ class BookingService
         }
 
         // Résolution du prix
-        $montant = $this->priceResolver->resolve(
+        $montant = $this->catalogService->getPrice(
             $vertical,
             $service
         );
