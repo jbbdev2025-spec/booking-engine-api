@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Vertical;
-use App\Services\BookingService;
+use App\Domain\Booking\BookingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,7 +17,7 @@ class BookingController extends Controller
     /**
      * POST /api/{vertical}/disponibilite
      *
-     * Body : { "service": "Hammam Simple", "date": "2026-07-16", "heure": "15:30" }
+     * Body : { "service": "Hammam Simple", "date": "2026-07-16", "heure": "15:30", "ville": "Douala" }
      * Réponse conforme au contrat du bot Node.js :
      *   { success, disponible, creneaux_alternatifs, timestamp }
      */
@@ -27,7 +27,7 @@ class BookingController extends Controller
             'service' => 'required|string',
             'date'    => 'required|date',
             'heure'   => 'required|date_format:H:i',
-            'ville' => 'required|string|max:100',
+            'ville'   => 'required|string|max:100',
         ]);
 
         $vertical = $request->attributes->get('vertical');
@@ -36,8 +36,7 @@ class BookingController extends Controller
             $vertical,
             $request->service,
             $request->date,
-            $request->heure,
-            $request->ville
+            $request->heure
         );
 
         if (isset($resultat['erreur'])) {
@@ -59,7 +58,7 @@ class BookingController extends Controller
      * POST /api/{vertical}/reservation
      *
      * Body : { "prenom": "Thierry", "telephone": "699999999",
-     *          "service": "Hammam simple", "date": "2026-06-21", "heure": "15:30" }
+     *          "service": "Hammam simple", "date": "2026-06-21", "heure": "15:30", "ville": "Douala" }
      * Réponse :
      *   { success, confirmation, evenement_id, lien, timestamp }
      */
