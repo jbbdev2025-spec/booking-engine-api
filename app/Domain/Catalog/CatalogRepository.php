@@ -4,8 +4,9 @@ namespace App\Domain\Catalog;
 
 use App\Models\Prestation;
 use Illuminate\Database\Eloquent\Collection;
+use App\Contracts\Repositories\CatalogRepositoryInterface;
 
-class CatalogRepository
+class CatalogRepository implements CatalogRepositoryInterface
 {
     public function findService(
         int $verticalId,

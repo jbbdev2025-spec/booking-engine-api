@@ -3,16 +3,14 @@
 namespace App\Domain\Scheduling;
 
 use App\Domain\Shared\Time\TimeCalculator;
-use App\Domain\Catalog\CatalogRepository;
-use App\Domain\Catalog\ServiceCatalog;
 use App\Models\Vertical;
+use App\Contracts\Repositories\CatalogRepositoryInterface;
 
 class AvailabilityChecker
 {
     public function __construct(
         private ConflictDetector $conflictDetector,
-        private CatalogRepository $catalogRepository,
-        private ServiceCatalog $serviceCatalog
+        private CatalogRepositoryInterface $catalogRepository,
     ) {}
 
     public function check(

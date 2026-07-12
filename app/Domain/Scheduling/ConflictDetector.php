@@ -3,16 +3,15 @@
 namespace App\Domain\Scheduling;
 
 use App\Models\Vertical;
-use App\Domain\Booking\BookingRepository;
-use App\Domain\Scheduling\SchedulingRules;
+use App\Contracts\Repositories\BookingRepositoryInterface;
+use App\Contracts\Repositories\CatalogRepositoryInterface;
 use App\Domain\Shared\Time\TimeCalculator;
-use App\Domain\Catalog\CatalogRepository;
 
 class ConflictDetector
 {
     public function __construct(
-        private BookingRepository $bookingRepository,
-        private CatalogRepository $catalogRepository
+        private BookingRepositoryInterface $bookingRepository,
+        private CatalogRepositoryInterface $catalogRepository
     ) {}
 
     public function count(
@@ -23,12 +22,14 @@ class ConflictDetector
         int $dureeMin
     ): int {
 
-        $rdvs = $this->bookingRepository->getReservationsForDay(
+        $rdvs = $this->bookingRepository->findForDate(
             $vertical->id,
             $date
         );
 
-        $prestations = $this->catalogRepository->getServicesIndexedByName($vertical->id);
+        $prestations = $this->catalogRepository->getServicesIndexedByName(
+            $vertical->id
+        );
 
         $conflits = 0;
 
@@ -45,7 +46,8 @@ class ConflictDetector
             }
 
             // Fallback to default duration if prestation duration is not set
-            $dureeRdv = $info->duree_minutes ?: SchedulingRules::DEFAULT_DURATION_MINUTES;
+            $dureeRdv = $info->duree_minutes
+                ?: SchedulingRules::DEFAULT_DURATION_MINUTES;
 
             $debutRdv = TimeCalculator::toMinutes(
                 $rdv->heure_rdv->format('H:i')

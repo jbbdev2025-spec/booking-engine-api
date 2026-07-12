@@ -5,16 +5,16 @@ namespace App\Domain\Booking;
 use App\Models\Vertical;
 use App\Domain\Catalog\PriceResolver;
 use App\Domain\Booking\BookingFactory;
-use App\Domain\Booking\BookingRepository;
 use App\Domain\Booking\BookingValidator;
 use App\Domain\Scheduling\AvailabilityChecker;
+use App\Contracts\Repositories\BookingRepositoryInterface;
 
 class BookingService
 {
     public function __construct(
         private AvailabilityChecker $availabilityChecker,
         private PriceResolver $priceResolver,
-        private BookingRepository $bookingRepository,
+        private BookingRepositoryInterface $bookingRepository,
         private BookingFactory $bookingFactory,
         private BookingValidator $bookingValidator
     ) {}
@@ -49,7 +49,12 @@ class BookingService
         string $heure
     ): array {
         // Re-vérification avant écriture
-        $verif = $this->verifierDisponibilite($vertical, $service, $date, $heure);
+        $verif = $this->verifierDisponibilite(
+            $vertical,
+            $service,
+            $date,
+            $heure
+        );
 
         $validation = $this->bookingValidator->validate($verif);
 
@@ -63,7 +68,7 @@ class BookingService
             $service
         );
 
-        // Résoudre le nom de catégorie
+        // Construction de la réservation
         $data = $this->bookingFactory->make($vertical, [
             'prenom'      => $prenom,
             'telephone'   => $telephone,
@@ -74,10 +79,9 @@ class BookingService
             'montant'     => $montant,
         ]);
 
-        // Création de la réservation
+        // Création de la réservation via le contrat Repository
         $rdv = $this->bookingRepository->create($data);
 
-        // Retourne la confirmation
         return [
             'success' => true,
             'confirmation' => true,
@@ -85,8 +89,4 @@ class BookingService
             'lien' => null,
         ];
     }
-
-    // ─── Méthodes privées ─────────────────────────────────────────
-
-
 }
