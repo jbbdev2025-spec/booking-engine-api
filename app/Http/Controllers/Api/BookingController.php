@@ -139,7 +139,7 @@ class BookingController extends Controller
         return response()->json(['success' => true, 'data' => $reservations]);
     }
 
-    public function update(Request $request, string $vertical, $id)
+    public function update(Request $request, string $vertical, int $id)
     {
         $verticalRecord = Vertical::where('slug', $vertical)->first();
         if (!$verticalRecord) {
