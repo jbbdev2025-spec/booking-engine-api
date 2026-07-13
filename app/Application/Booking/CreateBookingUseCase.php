@@ -3,7 +3,7 @@
 namespace App\Application\Booking;
 
 use App\Domain\Booking\BookingService;
-use App\Models\Vertical;
+use App\Application\Booking\CreateBookingRequest;
 
 class CreateBookingUseCase
 {
@@ -12,20 +12,15 @@ class CreateBookingUseCase
     ) {}
 
     public function execute(
-        Vertical $vertical,
-        string $prenom,
-        string $telephone,
-        string $service,
-        string $date,
-        string $heure
+        CreateBookingRequest $request
     ): array {
         return $this->bookingService->creerReservation(
-            $vertical,
-            $prenom,
-            $telephone,
-            $service,
-            $date,
-            $heure
+            $request->vertical,
+            $request->prenom,
+            $request->telephone,
+            $request->service,
+            $request->date,
+            $request->heure
         );
     }
 }

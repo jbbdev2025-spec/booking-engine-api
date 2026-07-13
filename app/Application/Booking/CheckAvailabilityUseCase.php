@@ -3,6 +3,7 @@
 namespace App\Application\Booking;
 
 use App\Domain\Booking\BookingService;
+use App\Domain\Shared\DTO\CheckAvailabilityRequest;
 use App\Models\Vertical;
 
 class CheckAvailabilityUseCase
@@ -11,17 +12,17 @@ class CheckAvailabilityUseCase
         private BookingService $bookingService
     ) {}
 
+    /**
+     * @param mixed $request Expected to have properties: vertical, service, date, heure
+     */
     public function execute(
-        Vertical $vertical,
-        string $service,
-        string $date,
-        string $heure
+        $request
     ): array {
         return $this->bookingService->verifierDisponibilite(
-            $vertical,
-            $service,
-            $date,
-            $heure
+            $request->vertical,
+            $request->service,
+            $request->date,
+            $request->heure
         );
     }
 }

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Vertical;
 use App\Application\Booking\CheckAvailabilityUseCase;
 use App\Application\Booking\CreateBookingUseCase;
+use App\Application\Booking\CreateBookingRequest;
+use App\Application\Booking\CheckAvailabilityRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -34,12 +36,15 @@ class BookingController extends Controller
 
         $vertical = $request->attributes->get('vertical');
 
-        $resultat = $this->checkAvailability->execute(
-            $vertical,
-            $request->service,
-            $request->date,
-            $request->heure
+        $availabilityRequest = new CheckAvailabilityRequest(
+            vertical: $vertical,
+            service: $request->service,
+            date: $request->date,
+            heure: $request->heure,
+            ville: $request->ville,
         );
+
+        $resultat = $this->checkAvailability->execute($availabilityRequest);
 
         if (isset($resultat['erreur'])) {
             return response()->json([
@@ -77,14 +82,17 @@ class BookingController extends Controller
 
         $vertical = $request->attributes->get('vertical');
 
-        $resultat = $this->createBooking->execute(
-            $vertical,
-            $request->prenom,
-            $request->telephone,
-            $request->service,
-            $request->date,
-            $request->heure
+        $requestDto = new CreateBookingRequest(
+            vertical: $vertical,
+            prenom: $request->prenom,
+            telephone: $request->telephone,
+            service: $request->service,
+            date: $request->date,
+            heure: $request->heure,
+            ville: $request->ville,
         );
+
+        $resultat = $this->createBooking->execute($requestDto);
 
         if (!$resultat['success']) {
             return response()->json([
