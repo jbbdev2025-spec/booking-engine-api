@@ -4,14 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Vertical;
-use App\Domain\Booking\BookingService;
+use App\Application\Booking\CheckAvailabilityUseCase;
+use App\Application\Booking\CreateBookingUseCase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
     public function __construct(
-        private BookingService $bookingService
+        private CheckAvailabilityUseCase $checkAvailability,
+        private CreateBookingUseCase $createBooking
     ) {}
 
     /**
@@ -32,7 +34,7 @@ class BookingController extends Controller
 
         $vertical = $request->attributes->get('vertical');
 
-        $resultat = $this->bookingService->verifierDisponibilite(
+        $resultat = $this->checkAvailability->execute(
             $vertical,
             $request->service,
             $request->date,
@@ -75,7 +77,7 @@ class BookingController extends Controller
 
         $vertical = $request->attributes->get('vertical');
 
-        $resultat = $this->bookingService->creerReservation(
+        $resultat = $this->createBooking->execute(
             $vertical,
             $request->prenom,
             $request->telephone,
