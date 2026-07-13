@@ -5,7 +5,7 @@ namespace App\Listeners\Booking;
 use App\Domain\Booking\Events\BookingCreated;
 use App\Projections\CalendarProjectionService;
 
-class BookingProjectionListener
+class BookingCreatedListener
 {
     private CalendarProjectionService $calendarProjection;
 
