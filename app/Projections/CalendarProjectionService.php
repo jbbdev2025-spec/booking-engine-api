@@ -2,20 +2,20 @@
 
 namespace App\Projections;
 
+use App\Infrastructure\Dashboard\DashboardApiClient;
+
 class CalendarProjectionService
 {
+    public function __construct(
+        private DashboardApiClient $dashboard
+    ) {}
+
     public function bookingCreated(int $bookingId): void
     {
-        // TODO : Synchroniser le Dashboard
+        // Sprint suivant
     }
 
-    public function bookingUpdated(int $bookingId): void
-    {
-        // TODO : Synchroniser le Dashboard
-    }
+    public function bookingUpdated(int $bookingId): void {}
 
-    public function bookingCancelled(int $bookingId): void
-    {
-        // TODO : Synchroniser le Dashboard
-    }
+    public function bookingCancelled(int $bookingId): void {}
 }
