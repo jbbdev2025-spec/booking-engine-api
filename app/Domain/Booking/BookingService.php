@@ -7,7 +7,11 @@ use App\Domain\Catalog\CatalogService;
 use App\Domain\Booking\BookingFactory;
 use App\Domain\Booking\BookingValidator;
 use App\Domain\Scheduling\SchedulingService;
+use App\Domain\Booking\Events\BookingCreated;
+use App\Domain\Booking\Events\BookingUpdated;
+use App\Domain\Booking\Events\BookingCancelled;
 use App\Contracts\Repositories\BookingRepositoryInterface;
+use App\Models\RendezVous;
 
 class BookingService
 {
@@ -80,12 +84,18 @@ class BookingService
         ]);
 
         // Création de la réservation via le contrat Repository
-        $rdv = $this->bookingRepository->create($data);
+        $rendezVous = $this->bookingRepository->create($data);
+
+        event(
+            new BookingCreated(
+                bookingId: $rendezVous->id,
+            )
+        );
 
         return [
             'success' => true,
             'confirmation' => true,
-            'evenement_id' => $rdv->id,
+            'evenement_id' => $rendezVous->id,
             'lien' => null,
         ];
     }
