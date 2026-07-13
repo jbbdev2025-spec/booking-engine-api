@@ -4,18 +4,19 @@ namespace App\Domain\Catalog;
 
 use App\Models\Vertical;
 use App\Contracts\Repositories\CatalogRepositoryInterface;
+use App\Models\Prestation;
+use RuntimeException;
 
 class CatalogService
 {
     public function __construct(
         private CatalogRepositoryInterface $catalogRepository,
-        private PriceResolver $priceResolver,
     ) {}
 
     public function findService(
         Vertical $vertical,
         string $service
-    ): ?object
+    ): ?Prestation
     {
         return $this->catalogRepository->findService(
             $vertical->id,
@@ -28,9 +29,25 @@ class CatalogService
         string $service
     ): int
     {
-        return $this->priceResolver->resolve(
-            $vertical->id,
+        $prestation = $this->findService(
+            $vertical,
             $service
+        );
+
+        if (!$prestation || empty($prestation->prix)) {
+            throw new \RuntimeException(
+                "Prix non disponible pour le service : {$service}"
+            );
+        }
+
+        $prix = preg_replace('/\s/', '', $prestation->prix);
+
+        if (preg_match('/(\d+)/', $prix, $match)) {
+            return (int) $match[1];
+        }
+
+        throw new \RuntimeException(
+            "Prix non disponible pour le service : {$service}"
         );
     }
 
@@ -39,11 +56,20 @@ class CatalogService
         string $service
     ): int
     {
-        $prestation = $this->findService(
-            $vertical,
-            $service
-        );
+        $prestation = $this->findService($vertical, $service);
 
-        return $prestation->duree_min;
+        if (!$prestation) {
+            throw new RuntimeException(
+                "Service introuvable : {$service}"
+            );
+        }
+
+        if ($prestation->duree_minutes === null) {
+            throw new RuntimeException(
+                "La durée est absente pour le service : {$service}"
+            );
+        }
+
+        return (int) $prestation->duree_minutes;
     }
 }

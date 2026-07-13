@@ -3,14 +3,14 @@
 namespace App\Domain\Scheduling;
 
 use App\Domain\Shared\Time\TimeCalculator;
+use App\Domain\Catalog\CatalogService;
 use App\Models\Vertical;
-use App\Contracts\Repositories\CatalogRepositoryInterface;
 
 class AvailabilityChecker
 {
     public function __construct(
+        private CatalogService $catalogService,
         private ConflictDetector $conflictDetector,
-        private CatalogRepositoryInterface $catalogRepository,
     ) {}
 
     public function check(
@@ -20,8 +20,10 @@ class AvailabilityChecker
         string $heure
     ): array {
 
-        // 1. Trouver la prestation
-        $prestation = $this->catalogRepository->findService($vertical->id, $service);
+        $prestation = $this->catalogService->findService(
+            $vertical,
+            $service
+        );
 
         if (!$prestation) {
             return [
@@ -34,7 +36,11 @@ class AvailabilityChecker
         }
 
         $categorieId = $prestation->categorie_id;
-        $dureeMin = $prestation->duree_minutes;
+
+        $dureeMin =  $this->catalogService->getDuration(
+                        $vertical,
+                        $service
+                    );
         $capacite = $vertical->capacites_par_categorie[$categorieId] ?? 1;
 
         // Heure demandée
