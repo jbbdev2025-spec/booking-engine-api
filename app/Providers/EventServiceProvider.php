@@ -5,15 +5,15 @@ namespace App\Providers;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 use App\Domain\Booking\Events\BookingCreated;
-use App\Listeners\Booking\BookingProjectionListener;
+use App\Listeners\Booking\BookingCreatedListener;
 
 class EventServiceProvider extends ServiceProvider
 {
-    protected $listen = [
+    protected array $listen = [
 
         BookingCreated::class => [
 
-            BookingProjectionListener::class,
+            BookingCreatedListener::class,
 
         ],
 
