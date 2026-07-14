@@ -16,6 +16,7 @@ class SchedulingService
         string $date,
         string $heure
     ): array {
+
         return $this->availabilityChecker->check(
             $vertical,
             $service,

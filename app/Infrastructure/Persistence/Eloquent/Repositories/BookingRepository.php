@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Booking;
+namespace App\Infrastructure\Persistence\Eloquent\Repositories;
 
 use App\Models\RendezVous;
 use Illuminate\Support\Collection;

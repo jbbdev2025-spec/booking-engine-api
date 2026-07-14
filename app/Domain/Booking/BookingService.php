@@ -11,7 +11,7 @@ use App\Domain\Booking\Events\BookingCreated;
 use App\Domain\Booking\Events\BookingUpdated;
 use App\Domain\Booking\Events\BookingCancelled;
 use App\Contracts\Repositories\BookingRepositoryInterface;
-use App\Models\RendezVous;
+use App\Application\Booking\CancelBookingRequest;
 
 class BookingService
 {
@@ -24,6 +24,34 @@ class BookingService
     ) {}
 
     /**
+     * Annule une réservation
+     */
+    public function cancelReservation(
+        CancelBookingRequest $request
+    ): array {
+        $reservation = $this->bookingRepository->findById(
+            $request->vertical->id,
+            $request->bookingId
+        );
+
+        if (!$reservation) {
+            return [
+                'success' => false,
+                'message' => 'Réservation introuvable.',
+            ];
+        }
+
+        $reservation->update(['statut' => 'annulé']);
+
+        event(new BookingCancelled($reservation->id));
+
+        return [
+            'success' => true,
+            'message' => 'Réservation annulée avec succès.',
+        ];
+    }
+
+    /**
      * Vérifie la disponibilité d'un créneau
      * Réplique exactement la logique de lib/booking.ts du dashboard Next.js
      */
@@ -33,6 +61,7 @@ class BookingService
         string $date,
         string $heure
     ): array {
+
         return $this->schedulingService->verifierDisponibilite(
             $vertical,
             $service,

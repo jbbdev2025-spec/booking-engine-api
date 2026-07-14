@@ -2,23 +2,26 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\Vertical;
-use App\Application\Booking\CheckAvailabilityUseCase;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Controller;
 use App\Application\Booking\CreateBookingUseCase;
 use App\Application\Booking\CreateBookingRequest;
-use App\Application\Booking\CheckAvailabilityRequest;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use App\Application\Booking\UpdateBookingRequest;
 use App\Application\Booking\UpdateBookingUseCase;
+use App\Application\Booking\CancelBookingUseCase;
+use App\Application\Booking\CancelBookingRequest;
+use App\Application\Booking\CheckAvailabilityUseCase;
+use App\Application\Booking\CheckAvailabilityRequest;
 
 class BookingController extends Controller
 {
     public function __construct(
         private CheckAvailabilityUseCase $checkAvailability,
         private CreateBookingUseCase $createBooking,
-        private UpdateBookingUseCase $updateBooking
+        private UpdateBookingUseCase $updateBooking,
+        private CancelBookingUseCase $cancelBooking,
     ) {}
 
     /**
@@ -115,6 +118,31 @@ class BookingController extends Controller
         ]);
     }
 
+    /**
+     * DELETE /api/{vertical}/reservation/{id}
+     *
+     * Réponse :
+     *   { success, message, timestamp }
+     */
+
+    public function destroy(string $vertical, int $id): JsonResponse
+    {
+        $vertical = request()->attributes->get('vertical');
+
+        $requestDto = new CancelBookingRequest(
+            vertical: $vertical,
+            bookingId: $id,
+        );
+
+        $result = $this->cancelBooking->execute($requestDto);
+
+        if (!$result['success']) {
+            return response()->json($result, 404);
+        }
+
+        return response()->json($result);
+    }
+
     public function index(Request $request, string $vertical): JsonResponse
     {
         $verticalRecord = Vertical::where('slug', $vertical)->first();
@@ -151,6 +179,8 @@ class BookingController extends Controller
 
         return response()->json(['success' => true, 'data' => $reservations]);
     }
+
+
 
     public function update(Request $request, string $vertical, int $id): JsonResponse
     {

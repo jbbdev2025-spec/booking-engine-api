@@ -2,9 +2,10 @@
 
 namespace App\Domain\Scheduling;
 
-use App\Domain\Shared\Time\TimeCalculator;
-use App\Domain\Catalog\CatalogService;
+use Carbon\Carbon;
 use App\Models\Vertical;
+use App\Domain\Catalog\CatalogService;
+use App\Domain\Shared\Time\TimeCalculator;
 
 class AvailabilityChecker
 {
@@ -13,12 +14,28 @@ class AvailabilityChecker
         private ConflictDetector $conflictDetector,
     ) {}
 
+    /**
+     * Vérifie la disponibilité d'un créneau
+     * Réplique exactement la logique de lib/booking.ts du dashboard Next.js
+     */
+
     public function check(
         Vertical $vertical,
         string $service,
         string $date,
         string $heure
     ): array {
+        $requestedDateTime = Carbon::parse("$date $heure");
+
+        if ($requestedDateTime->isPast()) {
+            return [
+                'disponible' => false,
+                'creneaux_alternatifs' => [],
+                'dureeMinutes' => 0,
+                'categorieId' => -1,
+                'erreur' => 'Impossible de réserver un créneau passé.',
+            ];
+        }
 
         $prestation = $this->catalogService->findService(
             $vertical,
@@ -38,9 +55,9 @@ class AvailabilityChecker
         $categorieId = $prestation->categorie_id;
 
         $dureeMin =  $this->catalogService->getDuration(
-                        $vertical,
-                        $service
-                    );
+            $vertical,
+            $service
+        );
         $capacite = $vertical->capacites_par_categorie[$categorieId] ?? 1;
 
         // Heure demandée

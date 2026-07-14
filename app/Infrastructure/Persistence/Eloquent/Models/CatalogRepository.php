@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Catalog;
+namespace App\Infrastructure\Persistence\Eloquent\Repositories;
 
 use App\Models\Prestation;
 use Illuminate\Database\Eloquent\Collection;

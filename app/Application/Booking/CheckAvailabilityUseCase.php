@@ -3,8 +3,6 @@
 namespace App\Application\Booking;
 
 use App\Domain\Booking\BookingService;
-use App\Domain\Shared\DTO\CheckAvailabilityRequest;
-use App\Models\Vertical;
 
 class CheckAvailabilityUseCase
 {
