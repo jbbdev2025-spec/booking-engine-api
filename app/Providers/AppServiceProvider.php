@@ -2,13 +2,11 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\ServiceProvider;
 use App\Contracts\Repositories\BookingRepositoryInterface;
 use App\Contracts\Repositories\CatalogRepositoryInterface;
-
-use App\Domain\Booking\BookingRepository;
-use App\Domain\Catalog\CatalogRepository;
-
-use Illuminate\Support\ServiceProvider;
+use App\Infrastructure\Persistence\Eloquent\Repositories\BookingRepository;
+use App\Infrastructure\Persistence\Eloquent\Repositories\CatalogRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
