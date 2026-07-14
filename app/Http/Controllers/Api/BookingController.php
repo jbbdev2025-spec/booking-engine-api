@@ -10,12 +10,15 @@ use App\Application\Booking\CreateBookingRequest;
 use App\Application\Booking\CheckAvailabilityRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Application\Booking\UpdateBookingRequest;
+use App\Application\Booking\UpdateBookingUseCase;
 
 class BookingController extends Controller
 {
     public function __construct(
         private CheckAvailabilityUseCase $checkAvailability,
-        private CreateBookingUseCase $createBooking
+        private CreateBookingUseCase $createBooking,
+        private UpdateBookingUseCase $updateBooking
     ) {}
 
     /**
@@ -112,7 +115,7 @@ class BookingController extends Controller
         ]);
     }
 
-    public function index(Request $request, string $vertical)
+    public function index(Request $request, string $vertical): JsonResponse
     {
         $verticalRecord = Vertical::where('slug', $vertical)->first();
         if (!$verticalRecord) {
@@ -149,23 +152,28 @@ class BookingController extends Controller
         return response()->json(['success' => true, 'data' => $reservations]);
     }
 
-    public function update(Request $request, string $vertical, int $id)
+    public function update(Request $request, string $vertical, int $id): JsonResponse
     {
-        $verticalRecord = Vertical::where('slug', $vertical)->first();
-        if (!$verticalRecord) {
-            return response()->json(['success' => false, 'error' => 'Verticale non trouvée'], 404);
-        }
-
-        $reservation = \App\Models\RendezVous::where('vertical_id', $verticalRecord->id)
-            ->findOrFail($id);
-
         $validated = $request->validate([
             'statut'  => 'sometimes|string',
             'montant' => 'sometimes|nullable|numeric',
         ]);
 
-        $reservation->update($validated);
+        $vertical = $request->attributes->get('vertical');
 
-        return response()->json(['success' => true, 'data' => $reservation]);
+        $requestDto = new UpdateBookingRequest(
+            vertical: $vertical,
+            bookingId: $id,
+            statut: $validated['statut'] ?? null,
+            montant: $validated['montant'] ?? null,
+        );
+
+        $result = $this->updateBooking->execute($requestDto);
+
+        if (!$result['success']) {
+            return response()->json($result, 404);
+        }
+
+        return response()->json($result);
     }
 }

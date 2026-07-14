@@ -6,11 +6,17 @@ use Illuminate\Support\Facades\Http;
 
 class DashboardApiClient
 {
+    private function client()
+    {
+        return Http::withHeaders([
+            'X-API-Key' => config('services.dashboard.api_key'),
+            'Accept' => 'application/json',
+        ]);
+    }
+
     public function createBooking(int $bookingId): void
     {
-        Http::withHeaders([
-            'X-API-Key' => config('services.dashboard.api_key'),
-        ])->post(
+        $this->client()->post(
             config('services.dashboard.url') . '/api/bookings',
             [
                 'booking_id' => $bookingId,

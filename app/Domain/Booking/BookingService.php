@@ -42,6 +42,37 @@ class BookingService
     }
 
     /**
+     * Met à jour une réservation
+     */
+    public function updateReservation(
+        \App\Application\Booking\UpdateBookingRequest $request
+    ): array {
+        $reservation = $this->bookingRepository->findById(
+            $request->vertical->id,
+            $request->bookingId
+        );
+
+        if (!$reservation) {
+            return [
+                'success' => false,
+                'message' => 'Réservation introuvable.',
+            ];
+        }
+
+        $reservation->update(array_filter([
+            'statut'  => $request->statut,
+            'montant' => $request->montant,
+        ], fn($value) => $value !== null));
+
+        event(new BookingUpdated($reservation->id));
+
+        return [
+            'success' => true,
+            'booking' => $reservation,
+        ];
+    }
+
+    /**
      * Crée une réservation
      */
     public function creerReservation(
