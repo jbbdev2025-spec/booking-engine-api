@@ -31,4 +31,9 @@ return [
         ],
     ],
 
+    'dashboard' => [
+        'url' => env('DASHBOARD_URL'),
+        'api_key' => env('DASHBOARD_API_KEY'),
+    ],
+
 ];

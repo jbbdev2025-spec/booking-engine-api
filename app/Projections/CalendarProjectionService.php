@@ -12,10 +12,16 @@ class CalendarProjectionService
 
     public function bookingCreated(int $bookingId): void
     {
-        // Sprint suivant
+        $this->dashboard->createBooking($bookingId);
     }
 
-    public function bookingUpdated(int $bookingId): void {}
+    public function bookingUpdated(int $bookingId): void
+    {
+        $this->dashboard->updateBooking($bookingId);
+    }
 
-    public function bookingCancelled(int $bookingId): void {}
+    public function bookingCancelled(int $bookingId): void
+    {
+        $this->dashboard->cancelBooking($bookingId);
+    }
 }
