@@ -186,4 +186,22 @@ class AvailabilityTest extends TestCase
                 return count($alternatives) > 0;
             });
     }    
+
+
+    /**
+     * Vérifie qu'une mauvaise clé API est rejetée.
+     */
+    public function test_invalid_api_key_is_rejected(): void
+    {
+        $response = $this->withHeaders([
+            'x-api-key' => 'mauvaise-cle-secrete',
+        ])->postJson('/api/beauty_salon/disponibilite', [
+            'service' => 'Manucure',
+            'date'    => now()->addDay()->format('Y-m-d'),
+            'heure'   => '10:00',
+            'ville'   => 'Douala',
+        ]);
+
+        $response->assertStatus(401); // Unauthorized
+    }
 }
