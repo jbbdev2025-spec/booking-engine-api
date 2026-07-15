@@ -25,6 +25,7 @@ class AvailabilityChecker
         string $date,
         string $heure
     ): array {
+        
         $requestedDateTime = Carbon::parse("$date $heure");
 
         if ($requestedDateTime->isPast()) {
