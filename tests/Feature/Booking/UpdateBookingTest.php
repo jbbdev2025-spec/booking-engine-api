@@ -9,9 +9,11 @@ class UpdateBookingTest extends TestCase
 {
     public function test_update_booking_status_and_amount(): void
     {
+        $verticalId = \App\Models\Vertical::where('slug', 'beauty_salon')->value('id');
+
         // 1. On crée un RDV directement en base pour avoir un ID réel
         $rdv = RendezVous::create([
-            'vertical_id' => 1,
+            'vertical_id' => $verticalId, // <-- CHANGÉ ICI
             'ville'       => 'Douala',
             'prenom'      => 'Client A Modifier',
             'telephone'   => '690000000',

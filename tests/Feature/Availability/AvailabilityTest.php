@@ -32,7 +32,7 @@ class AvailabilityTest extends TestCase
 
     /**
      * Vérifie qu'un créneau passé est rejeté.
-     */ 
+     */
     public function test_past_date_is_rejected(): void
     {
         $response = $this->withHeaders([
@@ -133,20 +133,22 @@ class AvailabilityTest extends TestCase
 
     /**
      * Vérifie qu'un créneau saturé (capacité atteinte) est rejeté et propose des alternatives.
-     */    
+     */
     public function test_saturated_slot_shows_alternatives(): void
     {
         $date = now()->addDay()->format('Y-m-d');
         $heure = '10:00';
-        $verticalId = 1; // beauty_salon
 
-        // La capacité par catégorie étant de 2, on crée 2 RDV actifs pour saturer le créneau.
+        // On cherche l'ID réel au lieu de hardcoder 1
+        $verticalId = \App\Models\Vertical::where('slug', 'beauty_salon')->value('id');
+
+        // 1. On simule une réservation existante qui prend la seule place disponible (capacité = 1)
         \App\Models\RendezVous::create([
-            'vertical_id' => $verticalId,
+            'vertical_id' => $verticalId, // <-- CHANGÉ ICI
             'ville'       => 'Douala',
             'prenom'      => 'Client A',
             'telephone'   => '690000001',
-            'categorie'   => 'Test', // Le ConflictDetector ignore ce champ, il utilise le JOIN prestations
+            'categorie'   => 'Test',
             'service'     => 'Manucure',
             'date_rdv'    => $date,
             'heure_rdv'   => $heure,
@@ -154,7 +156,7 @@ class AvailabilityTest extends TestCase
         ]);
 
         \App\Models\RendezVous::create([
-            'vertical_id' => $verticalId,
+            'vertical_id' => $verticalId, // <-- CHANGÉ ICI
             'ville'       => 'Douala',
             'prenom'      => 'Client B',
             'telephone'   => '690000002',
@@ -185,7 +187,7 @@ class AvailabilityTest extends TestCase
             ->assertJsonPath('creneaux_alternatifs', function ($alternatives) {
                 return count($alternatives) > 0;
             });
-    }    
+    }
 
 
     /**

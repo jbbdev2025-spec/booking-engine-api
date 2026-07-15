@@ -9,9 +9,11 @@ class CancelBookingTest extends TestCase
 {
     public function test_cancel_booking_removes_it_from_database(): void
     {
+        $verticalId = \App\Models\Vertical::where('slug', 'beauty_salon')->value('id');
+
         // 1. On crée un RDV en base
         $rdv = RendezVous::create([
-            'vertical_id' => 1,
+            'vertical_id' => $verticalId, // <-- CHANGÉ ICI
             'ville'       => 'Douala',
             'prenom'      => 'Client A Supprimer',
             'telephone'   => '690000000',
