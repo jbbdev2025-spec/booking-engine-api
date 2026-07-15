@@ -16,8 +16,7 @@ class CatalogService
     public function findService(
         Vertical $vertical,
         string $service
-    ): ?Prestation
-    {
+    ): ?Prestation {
         return $this->catalogRepository->findService(
             $vertical->id,
             $service
@@ -27,17 +26,14 @@ class CatalogService
     public function getPrice(
         Vertical $vertical,
         string $service
-    ): int
-    {
+    ): ?int {
         $prestation = $this->findService(
             $vertical,
             $service
         );
 
         if (!$prestation || empty($prestation->prix)) {
-            throw new \RuntimeException(
-                "Prix non disponible pour le service : {$service}"
-            );
+            return null;
         }
 
         $prix = preg_replace('/\s/', '', $prestation->prix);
@@ -46,16 +42,13 @@ class CatalogService
             return (int) $match[1];
         }
 
-        throw new \RuntimeException(
-            "Prix non disponible pour le service : {$service}"
-        );
+        return null;
     }
 
     public function getDuration(
         Vertical $vertical,
         string $service
-    ): int
-    {
+    ): int {
         $prestation = $this->findService($vertical, $service);
 
         if (!$prestation) {
