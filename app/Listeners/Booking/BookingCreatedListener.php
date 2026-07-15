@@ -11,7 +11,9 @@ class BookingCreatedListener
 
     public function __construct(
         CalendarProjectionService $calendarProjection
-    ){}
+    ) {
+        $this->calendarProjection = $calendarProjection;
+    }
 
     public function handle(BookingCreated $event): void
     {
