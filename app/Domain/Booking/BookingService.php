@@ -41,13 +41,14 @@ class BookingService
             ];
         }
 
-        $reservation->update(['statut' => 'annulé']);
+        // Suppression physique pour correspondre au comportement "Supprimer définitivement" du Dashboard
+        $reservation->delete();
 
         event(new BookingCancelled($reservation->id));
 
         return [
             'success' => true,
-            'message' => 'Réservation annulée avec succès.',
+            'message' => 'Réservation supprimée avec succès.',
         ];
     }
 
