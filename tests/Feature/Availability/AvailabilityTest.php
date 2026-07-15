@@ -204,4 +204,23 @@ class AvailabilityTest extends TestCase
 
         $response->assertStatus(401); // Unauthorized
     }
+
+    /**
+     * Vérifie que les champs manquants sont rejetés.
+     */
+    public function test_missing_fields_are_rejected(): void
+    {
+        $response = $this->withHeaders([
+            'x-api-key' => env('BOOKING_API_SECRET'),
+        ])->postJson('/api/beauty_salon/disponibilite', [
+            'service' => 'Manucure',
+            // Il manque 'date' et 'heure'
+            'ville'   => 'Douala',
+        ]);
+
+        // Laravel doit renvoyer une erreur de validation (422 Unprocessable Entity)
+        $response
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['date', 'heure']);
+    }
 }
