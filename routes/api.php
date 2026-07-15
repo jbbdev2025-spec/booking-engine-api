@@ -8,5 +8,5 @@ Route::prefix('{vertical}')->middleware('api.key')->group(function () {
     Route::post('/reservation',    [BookingController::class, 'creerReservation']);
     Route::get('/reservations',           [BookingController::class, 'index']);
     Route::patch('/reservations/{id}',    [BookingController::class, 'update']);
-    Route::delete('/{vertical}/reservations/{id}', [BookingController::class, 'destroy']);
+    Route::delete('/reservations/{id}', [BookingController::class, 'destroy']);
 });
